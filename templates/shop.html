@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container">
+  <p>Coins: {{current_user.coins}}</p>
+
+  <div class="row">
+    {% for seed in seeds %}
+    <div class="col">
+      <div class="card">
+        <div class="card-header">{{seed.name}}</div>
+        <div class="card-body">
+          <img src="/static/seeds/{{seed.seed_sprite}}" alt="">
+          <p>${{seed.buy_price}}</p>
+        </div>
+        <div class="card-footer">
+          <form method="POST">
+            <button formaction="/buy/{{seed.name}}" type="submit" class="btn btn-primary">Buy Now</button>
+          </form>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

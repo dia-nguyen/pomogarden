@@ -1,0 +1,32 @@
+<!-- Modal -->
+<div class="modal fade" id="open-shop" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+  <div class="modal-wrapper">
+    <div class="modal-dialog">
+      <div class="modal-content border-wood-lg">
+        <div class="modal-header">
+          <h1 class="modal-title border-card">Shop</h1>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body shop">
+          <p>Coins: {{current_user.coins}}</p>
+          <div>
+            {% for seed in g.seeds %}
+            <div class="shop-item">
+              <div class="item-details">
+                <img src="/static/seeds/{{seed.seed_sprite}}" alt="">
+                <span>{{seed.name | capitalize}} Seeds</span>
+              </div>
+              <div class="buy-details">
+                <span class="coin-symbol">{{seed.buy_price}}</span>
+                <form method="POST">
+                  <button formaction="/buy/{{seed.name}}" type="submit" class="button">Buy Now</button>
+                </form>
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

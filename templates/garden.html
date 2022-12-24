@@ -1,0 +1,52 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<!-- outer cursor div-->
+<div class="cursor">
+</div>
+<!-- inner cursor div-->
+<div class="cursor2">
+</div>
+
+<div class="container garden-container">
+  <div class="garden-wrapper">
+
+      <form class="plot-wrapper">
+      {% for plot in current_user.plant_plots|sort(attribute='id') if plot.status != "sold" %}
+
+      {% if not plot.sowed %}
+          <button formmethod="POST" formaction="/{{plot.id}}/sow" class="plot"></button>
+
+        {% elif not plot.planted %}
+          <button formmethod="POST" formaction="/{{plot.id}}/plant" class="plot sowed"></button>
+
+        {% elif not plot.watered and plot.age != "ripe" %}
+          <button formmethod="POST" formaction="/{{plot.id}}/water" class="plot sowed planted">
+            <img src="/static/seeds/{{plot.current_sprite}}" class="{{plot.name}} {{plot.age}}" alt="{{plot.name}}">
+          </button>
+
+        {% elif plot.age == "ripe" %}
+        <button formmethod="POST" formaction="/{{plot.id}}/sell" class="plot ready-to-sell">
+          <img src="/static/seeds/{{plot.current_sprite}}" class="{{plot.name}} {{plot.age}}" alt="{{plot.name}}">
+        </button>
+
+        {% else %}
+          <button class="plot sowed watered">
+            <img src="/static/seeds/{{plot.current_sprite}}" class="{{plot.name}} {{plot.age}}" alt="{{plot.name}}">
+          </button>
+        {% endif %}
+
+      {% endfor %}
+      </form>
+
+    <img src="/static/garden/field.png" alt="" class="field">
+
+  </div>
+
+  {% if current_user.available_plots %}
+  <form action="/next-day" method="POST" class="mt-4">
+    <button class="button">go to next day</button>
+  </form>
+  {% endif %}
+</div>
+{% endblock %}
