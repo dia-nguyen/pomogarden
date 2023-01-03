@@ -1,7 +1,5 @@
 from flask import Blueprint, redirect, url_for, render_template, flash, g
-from flask_login import login_required, current_user
-from plants import plant_shop
-from models import db, Seed, PlantPlot
+from flask_login import current_user
 
 main = Blueprint('main', __name__)
 
