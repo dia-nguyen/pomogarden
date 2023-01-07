@@ -5,7 +5,6 @@ from models import Seed
 shop = Blueprint('shop', __name__)
 
 @shop.get('/shop')
-@login_required
 def get_shop_items():
     """Returns JSON with all seeds available for purchase"""
     shop_list = Seed.query.all()

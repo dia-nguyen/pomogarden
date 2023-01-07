@@ -14,7 +14,15 @@ def get_user_plants():
     """Returns JSON with user id and available plants and plots"""
     if current_user.is_authenticated:
         plants_list = user_plants_list(current_user.id)
-        return jsonify(user_id = current_user.id, plants = plants_list)
+        return jsonify(plants = plants_list)
+    return (jsonify(status="error", message="You are not logged in"))
+
+@garden.get('/coins')
+def get_user_coins():
+    """Returns JSON with user id and available plants and plots"""
+    if current_user.is_authenticated:
+        coins = current_user.coins
+        return jsonify(coins=coins)
     return (jsonify(status="error", message="You are not logged in"))
 
 
@@ -27,7 +35,7 @@ def buy_seed(seed):
             new_seed = Seed.query.get_or_404(seed)
             current_user.buy_seed(new_seed)
             db.session.commit()
-            return (jsonify(plant=new_seed.serialize(),status="success"), 201)
+            return (jsonify(plant=new_seed.serialize(),status="success", message=f"Successfully bought {new_seed.name} seeds") , 201)
 
         return (jsonify(status="error", message="Your inventory is full"))
 
