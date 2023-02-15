@@ -1,40 +1,45 @@
-from flask import Blueprint, render_template, url_for, redirect, flash
+from flask import Blueprint, jsonify, request
 from sqlalchemy.exc import IntegrityError
 from forms import SignUpForm, LoginForm
 from models import db, User
-from flask_login import login_user, logout_user, login_required
+from flask_login import login_user, logout_user, current_user
 
 auth = Blueprint('auth', __name__)
 
 
-@auth.route('/signup', methods=['GET', 'POST'])
+@auth.post('/signup')
 def signup():
     """Handle user sign up and """
-    form = SignUpForm()
+    if current_user.is_authenticated:
+        return (jsonify(status="error", message="You are currently logged in"))
+
+    data = request.get_json()
+    form = SignUpForm(data=data)
 
     if form.validate_on_submit():
         try:
             user = User.signup(
-                email=form.email.data,
-                name=form.name.data,
-                password=form.password.data,
+                email=form.data["email"],
+                name=form.data["name"],
+                password=form.data["password"],
             )
             db.session.commit()
 
         except IntegrityError:
-            flash("Email already taken", 'danger')
-            return render_template('auth/signup.html', form=form)
+            return (jsonify(status="error", message="Email already taken"))
 
-        login_user(user)
-        return redirect(url_for('main.index'))
+        login_user(user, remember=True)
+        return (jsonify(status="success", name=f"{current_user.name}", email=f"{current_user.email}", message=f"Welcome {current_user.name}"), 201)
 
     else:
-        return render_template('auth/signup.html', form=form)
+        return (jsonify(status="error", message="Invalid credentials"))
 
 
-@auth.route('/login', methods=["GET", "POST"])
+@auth.post('/login')
 def login():
     """Handle user login and redirect to homepage on success."""
+    if current_user.is_authenticated:
+        return (jsonify(status="error", message="You are currently logged in"))
 
     form = LoginForm()
 
@@ -45,17 +50,18 @@ def login():
         )
 
         if user:
-            flash(f"Hello, {user.name}!", "success")
+            login_user(user, remember=True)
+            return (jsonify(status="success", name=f"{current_user.name}", email=f"{current_user.email}", message=f"Welcome back {current_user.name}"), 201)
 
-            login_user(user)
-            return redirect(url_for('main.index'))
 
-        flash("Invalid credentials.", 'danger')
+    return (jsonify(status="error", message="Invalid credentials"))
 
-    return render_template('auth/login.html', form=form)
 
-@auth.route('/logout')
-@login_required
+@auth.post('/logout')
 def logout():
-    logout_user()
-    return redirect(url_for('main.index'))
+    if current_user.is_authenticated:
+        logout_user()
+        return jsonify(status="success", message="You've successfully logged out.")
+    return (jsonify(status="error", message="You are currently not logged in"))
+
+

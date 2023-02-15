@@ -43,6 +43,13 @@ class User(UserMixin, db.Model):
         default = 200
     )
 
+    def serialize(self):
+        """Serialize to dict"""
+        return {
+            "id": self.id,
+            "name": self.name,
+            "coins": self.coins
+        }
     def __repr__(self):
         return f"<User #{self.id}: {self.name}, {self.email}>"
 
@@ -183,6 +190,15 @@ class PlantPlot(db.Model):
             self.users[0].add_coins(seed.sell_price)
             self.status = "sold"
 
+    def serialize(self):
+        "Serialize to dict"
+        return {
+            "id": self.id,
+            "name": self.name,
+            "age": self.age,
+            "status": self.status,
+            "current_sprite": self.current_sprite
+        }
 
 
 class Garden(db.Model):
@@ -235,6 +251,20 @@ class Seed(db.Model):
     sell_price = db.Column(
         db.Integer
     )
+
+    def serialize(self):
+        "Serialize to dict"
+        return {
+            "name": self.name,
+            "buy_price": self.buy_price,
+            "sell_price": self.sell_price,
+            "seed_sprite": self.seed_sprite,
+            "sprout_sprite": self.sprout_sprite,
+            "seedling_sprite": self.seedling_sprite,
+            "budding_sprite": self.budding_sprite,
+            "ripe_sprite": self.ripe_sprite,
+            "plant_sprite": self.plant_sprite,
+        }
 
 
 def connect_db(app):
