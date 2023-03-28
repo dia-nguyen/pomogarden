@@ -55,11 +55,18 @@ def add_shop_to_global():
     """Adds shop items available globally"""
     g.seeds = plant_shop()
 
-@app.after_request
-def after_request(response):
-    response.headers.add('Access-Control-Allow-Origin', 'http://127.0.0.1:5003')
-    response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
-    response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,PATCH,DELETE,OPTIONS')
-    response.headers.add('Access-Control-Allow-Credentials', 'true')
+# @app.after_request
+# def after_request(response):
+#     response.headers.add('Access-Control-Allow-Origin', 'http://localhost:3005')
+#     # response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
+#     response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,PATCH,DELETE,OPTIONS')
+#     response.headers.add('Access-Control-Allow-Credentials', 'true')
 
-    return response
+#     return response
+
+CORS(app, resources={
+    r"/*": {
+        "origins": ["http://127.0.0.1:3005", "<http://localhost:3005>", "<http://localhost:5003/>"],
+        "supports_credentials": True
+    }
+})

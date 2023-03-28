@@ -27,7 +27,7 @@ def get_user_coins():
 
 
 
-@garden.post('/plant/<seed>/buy')
+@garden.post('/plants/<seed>/buy')
 def buy_seed(seed):
     """Buy seed from shop and to user"""
     if current_user.is_authenticated:
@@ -41,7 +41,7 @@ def buy_seed(seed):
 
 
 
-@garden.patch("/plant/<plant_id>/sow")
+@garden.patch("/plants/<plant_id>/sow")
 def sow_plot(plant_id):
     """Sow plot"""
     if current_user.is_authenticated:
@@ -55,7 +55,7 @@ def sow_plot(plant_id):
 
 
 
-@garden.patch("/plant/<plant_id>/plant")
+@garden.patch("/plants/<plant_id>/plant")
 def plant_plot(plant_id):
     """Plant in plot"""
     if current_user.is_authenticated:
@@ -70,7 +70,7 @@ def plant_plot(plant_id):
         return (jsonify(status="error", message="Cannot plant seed"))
 
 
-@garden.patch("/plant/<plant_id>/water")
+@garden.patch("/plants/<plant_id>/water")
 def water_plot(plant_id):
     """Plant in plot"""
     if current_user.is_authenticated:
@@ -83,7 +83,7 @@ def water_plot(plant_id):
         return (jsonify(status="error", message="Cannot be watered"))
 
 
-@garden.patch("/plant/<plant_plot>/sell")
+@garden.patch("/plants/<plant_plot>/sell")
 def harvest_and_sell(plant_plot):
     """Harvest and sell plant in plot"""
     if current_user.is_authenticated:
