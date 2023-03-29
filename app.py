@@ -9,13 +9,18 @@ from blueprints.main import main as main_blueprint
 from blueprints.garden import garden as garden_blueprint
 from blueprints.shop import shop as shop_blueprint
 from models import db, User, PlantPlot, Seed, connect_db
-from flask_login import LoginManager, current_user
 from plants import plant_shop
+from flask_jwt_extended import (
+    get_jwt_identity,
+    jwt_required,
+    JWTManager
+)
 
 app = Flask(__name__)
 load_dotenv()
+jwt = JWTManager(app)
 
-CORS(app, support_credentials=True)
+CORS(app)
 
 #config
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
@@ -27,9 +32,8 @@ app.config['SECRET_KEY'] = os.environ['SECRET_KEY']
 
 app.config['WTF_CSRF_ENABLED'] = False
 
-login_manager = LoginManager()
-login_manager.login_view = 'auth.login'
-login_manager.init_app(app)
+app.config["JWT_ACCESS_TOKEN_EXPIRES"] = False
+app.config["JWT_REFRESH_TOKEN_EXPIRES"] = False
 
 connect_db(app)
 db.create_all()
@@ -40,33 +44,11 @@ app.register_blueprint(main_blueprint)
 app.register_blueprint(garden_blueprint)
 app.register_blueprint(shop_blueprint)
 
-@login_manager.user_loader
-def load_user(user_id):
-    return User.query.get(int(user_id))
-
 @app.before_request
-def add_available_plots():
-    """Adds ids of liked messages to flask global."""
-    if current_user.is_authenticated:
-        current_user.available_plots = {plant_plot for plant_plot in current_user.plant_plots if plant_plot.status != "sold"}
-
-@app.before_request
-def add_shop_to_global():
-    """Adds shop items available globally"""
-    g.seeds = plant_shop()
-
-# @app.after_request
-# def after_request(response):
-#     response.headers.add('Access-Control-Allow-Origin', 'http://localhost:3005')
-#     # response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
-#     response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,PATCH,DELETE,OPTIONS')
-#     response.headers.add('Access-Control-Allow-Credentials', 'true')
-
-#     return response
-
-CORS(app, resources={
-    r"/*": {
-        "origins": ["http://127.0.0.1:3005", "<http://localhost:3005>", "<http://localhost:5003/>"],
-        "supports_credentials": True
-    }
-})
+@jwt_required(optional=True)
+def add_user_to_g():
+    """If we're logged in, add curr user to Flask global."""
+    try:
+        g.user = User.query.filter_by(id=get_jwt_identity()).one_or_none()
+    except:
+        g.user = None

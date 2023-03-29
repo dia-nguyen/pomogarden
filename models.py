@@ -43,6 +43,12 @@ class User(UserMixin, db.Model):
         default = 200
     )
 
+    plant_plots = db.relationship(
+        'PlantPlot',
+        secondary='gardens',
+        backref='users'
+    )
+
     def serialize(self):
         """Serialize to dict"""
         return {
@@ -101,8 +107,9 @@ class User(UserMixin, db.Model):
             self.coins -= seed.buy_price
             new_plant_plot = PlantPlot(
                 name = seed.name,
-                current_sprite = seed.seed_sprite
+                current_sprite = seed.seed_sprite,
             )
+            new_plant_plot.location = new_plant_plot.get_new_location()
             self.plant_plots.append(new_plant_plot)
         else:
             raise ValueError("Not enough points to purchase")
@@ -155,6 +162,20 @@ class PlantPlot(db.Model):
         default = False
     )
 
+    location = db.Column(
+        db.Integer(),
+        default=None,
+    )
+
+    def release_location(self):
+        self.location = None
+
+    def get_new_location(self):
+        for i in range(1, 4):
+            if not PlantPlot.query.filter_by(location=i).first():
+                return i
+        return None
+
     def sow_plot(self):
         """sow plot"""
         self.sowed = True
@@ -189,6 +210,7 @@ class PlantPlot(db.Model):
             self.current_sprite = seed.plant_sprite
             self.users[0].add_coins(seed.sell_price)
             self.status = "sold"
+            self.release_location()
 
     def serialize(self):
         "Serialize to dict"
@@ -197,7 +219,8 @@ class PlantPlot(db.Model):
             "name": self.name,
             "age": self.age,
             "status": self.status,
-            "current_sprite": self.current_sprite
+            "current_sprite": self.current_sprite,
+            "location": self.location,
         }
 
 

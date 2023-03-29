@@ -3,6 +3,11 @@ from sqlalchemy.exc import IntegrityError
 from forms import SignUpForm, LoginForm
 from models import db, User
 from flask_login import login_user, logout_user, current_user
+from flask_jwt_extended import (
+    create_access_token,
+    get_current_user,
+    jwt_required,
+)
 
 auth = Blueprint('auth', __name__)
 
@@ -10,9 +15,6 @@ auth = Blueprint('auth', __name__)
 @auth.post('/signup')
 def signup():
     """Handle user sign up and """
-    if current_user.is_authenticated:
-        return (jsonify(status="error", message="You are currently logged in"))
-
     data = request.get_json()
     form = SignUpForm(data=data)
 
@@ -24,24 +26,21 @@ def signup():
                 password=form.data["password"],
             )
             db.session.commit()
+            access_token = create_access_token(identity=user.id)
+            return jsonify(token=access_token), 201
 
         except IntegrityError:
-            return (jsonify(status="error", message="Email already taken"))
-
-        login_user(user, remember=True)
-        return (jsonify(status="success", name=f"{current_user.name}", email=f"{current_user.email}", message=f"Welcome {current_user.name}"), 201)
+            return (jsonify(status="error", message="Email already taken")), 409
 
     else:
-        return (jsonify(status="error", message="Invalid credentials"))
+        return (jsonify(status="error", message="Invalid credentials")), 500
 
 
 @auth.post('/login')
 def login():
     """Handle user login and redirect to homepage on success."""
-    if current_user.is_authenticated:
-        return (jsonify(status="error", message="You are currently logged in"))
-
-    form = LoginForm()
+    data = request.get_json()
+    form = LoginForm(data=data)
 
     if form.validate_on_submit():
         user = User.authenticate(
@@ -50,18 +49,20 @@ def login():
         )
 
         if user:
-            login_user(user, remember=True)
-            return (jsonify(status="success", name=f"{current_user.name}", email=f"{current_user.email}", message=f"Welcome back {current_user.name}"), 201)
+            access_token = create_access_token(identity=user.id)
+            return jsonify(token=access_token), 201
+        else:
+            return (jsonify(status="error", message="Invalid credentials"))
+    else:
+        return jsonify(errors=form.errors), 400
 
 
-    return (jsonify(status="error", message="Invalid credentials"))
-
-
-@auth.post('/logout')
-def logout():
-    if current_user.is_authenticated:
-        logout_user()
-        return jsonify(status="success", message="You've successfully logged out.")
-    return (jsonify(status="error", message="You are currently not logged in"))
-
-
+@auth.get('/users/<int:id>')
+@jwt_required()
+def user_profile(id):
+    """Gets all user information associated with user id"""
+    try:
+        user = User.query.get_or_404(id)
+        return jsonify(user=user.serialize())
+    except Exception as e:
+        return jsonify(errors=e), 404
